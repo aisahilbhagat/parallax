@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Outro - Credits</title>
+    <style>
+        /* --- style.css content --- */
+        
+        /* Font Registration */
+        @font-face {
+            font-family: 'Sans Beach';
+            src: url('Sans Beach.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            /* Applied the custom font here as the primary font */
+            font-family: 'Sans Beach', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, cursive;
+            overflow: hidden; /* Prevent manual scrolling */
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            user-select: none; /* Prevent text selection during scroll */
+        }
+
+        /* Container to center content width */
+        #credits-container {
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+            height: 100%;
+        }
+
+        /* The moving element */
+        #scrolling-content {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            /* Start below the screen. We use JS to set the initial transform for consistency */
+            will-change: transform;
+        }
+
+        /* Typography & Layout */
+        .credit-section {
+            margin-bottom: 4rem; /* Spacing between sections */
+            opacity: 0.9;
+        }
+
+        h1.game-title {
+            font-size: 5rem; /* Increased slightly for the display font */
+            font-weight: normal; /* Custom fonts often don't need bold */
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 6rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        h2.role-title {
+            font-size: 1.4rem;
+            color: #aaa; /* Slightly brighter for readability */
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            font-weight: normal;
+        }
+
+        p.name {
+            font-size: 1.8rem; /* Bumped up size for the custom font */
+            margin-bottom: 0.5rem;
+            font-weight: normal;
+        }
+
+        /* Special styling for the final thank you */
+        .final-message {
+            margin-top: 10rem;
+            margin-bottom: 50vh; /* Ensure it scrolls fully off screen */
+        }
+
+        .final-message h2 {
+            font-size: 2.5rem;
+            color: #fff;
+            text-transform: none;
+            letter-spacing: 1px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Audio Element -->
+    <audio id="outro-audio">
+        <source src="/music-assets/outro.ogg" type="audio/ogg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Scrolling Container -->
+    <div id="credits-container">
+        <div id="scrolling-content">
+            
+            <!-- 1. Game Title -->
+            <section class="credit-section">
+                <h1 class="game-title">Parallax</h1>
+            </section>
+
+            <!-- 2. Developed By -->
+            <section class="credit-section">
+                <h2 class="role-title">Developer/Coding</h2>
+                <p class="name">Sahil Bhagat</p>
+            </section>
+
+            <!-- 3. Programming -->
+            <section class="credit-section">
+                <h2 class="role-title">Game Design</h2>
+                <p class="name">Ayush Tirkey</p>
+                
+                <h2 class="role-title" style="margin-top: 2rem;">Gameplay Engineering</h2>
+                <p class="name">Sarah Vance</p>
+                <p class="name">David K.</p>
+            </section>
+
+            <!-- 4. Art & Assets -->
+            <section class="credit-section">
+                <h2 class="role-title">Cut Scenes/Video editor</h2>
+                <p class="name">Mayank Muskan</p>
+                
+                <h2 class="role-title" style="margin-top: 2rem;">Assets</h2>
+                <p class="name">Open Source</p>
+                <p class="name">Ai(Gemini/GLM 4.5)</p>
+            </section>
+
+            <!-- 5. Sound & Music -->
+            <section class="credit-section">
+                <h2 class="role-title">Backgroud Music</h2>
+                <p class="name">Aditya Raj</p>
+                
+                <h2 class="role-title" style="margin-top: 2rem;">Outro Music</h2>
+                <p class="name">Ayush Tirkey</p>
+            </section>
+
+            <!-- 6. Special Thanks -->
+            <section class="credit-section">
+                <h2 class="role-title">Special Thanks</h2>
+                <!-- <p class="name">The Open Source Community</p> -->
+                <p class="name">Classmates</p>
+                <p class="name">Bhaumik Vimal (Our classmate)</p>
+                <p class="name">People Who Played our game</p>
+            </section>
+
+            <!-- 7. Acknowledgements -->
+            <section class="credit-section">
+                <h2 class="role-title">Acknowledgements</h2>
+                <!-- <p class="name">Three.js</p> -->
+                <p class="name">AI(GLM 4.7, Gemini 3, GPT 5.2, Copilet)</p>
+            </section>
+
+            <!-- 8. Final Message -->
+            <section class="credit-section final-message">
+                <h2>Thank you for playing ❤️</h2>
+                <h4>Hate us or love us but no is creating a game like this in our whole school.</h4>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        /* --- credits.js content --- */
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const audio = document.getElementById('outro-audio');
+            const content = document.getElementById('scrolling-content');
+            
+            // Configuration
+            const SCROLL_SPEED = 1.0; // Pixels per frame (approx 60px/sec at 60fps)
+            let currentPos = window.innerHeight; // Start below the screen
+            let animationFrameId;
+            let isPlaying = false;
+
+            // Initialize position
+            content.style.transform = `translateY(${currentPos}px)`;
+
+            // Function to handle the scrolling loop
+            function scrollCredits() {
+                if (!isPlaying) return;
+
+                // Move up
+                currentPos -= SCROLL_SPEED;
+                content.style.transform = `translateY(${currentPos}px)`;
+
+                // Check if credits have finished
+                // We stop when the bottom of the content moves well past the top of the screen
+                const contentHeight = content.offsetHeight;
+                
+                if (currentPos < -contentHeight) {
+                    stopCredits();
+                } else {
+                    animationFrameId = requestAnimationFrame(scrollCredits);
+                }
+            }
+
+            // Start sequence
+            function startCredits() {
+                if (isPlaying) return;
+                isPlaying = true;
+                
+                // Play Audio
+                // Note: Modern browsers may block autoplay if the user hasn't interacted with the DOM yet.
+                // Since this is likely loaded in an iframe after game interaction, it should generally work.
+                audio.play().catch(e => console.warn("Audio autoplay blocked:", e));
+
+                // Start Loop
+                animationFrameId = requestAnimationFrame(scrollCredits);
+            }
+
+            // Stop sequence
+            function stopCredits() {
+                isPlaying = false;
+                cancelAnimationFrame(animationFrameId);
+                
+                // Fade out audio logic
+                const fadeAudio = setInterval(() => {
+                    if (audio.volume > 0.05) {
+                        audio.volume -= 0.05;
+                    } else {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        clearInterval(fadeAudio);
+                        
+                        // Signal the parent window (game_end.js) that we are done
+                        window.parent.postMessage('credits_end', '*');
+                    }
+                }, 100);
+            }
+
+            // Auto-start immediately
+            startCredits();
+
+            // Handle window resize to prevent visual jumping
+            window.addEventListener('resize', () => {
+                // Optional: Recalculate positions if needed
+            });
+        });
+    </script>
+</body>
+</html>

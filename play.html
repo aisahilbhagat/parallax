@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallax - Play</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #game-wrapper {
+            position: absolute;
+            width: 1366px;
+            height: 768px;
+            transform-origin: top left;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            top: 0;
+            left: 0;
+        }
+
+        #game-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        #portrait-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        #portrait-overlay.active {
+            display: flex;
+        }
+
+        #portrait-message {
+            color: #ffffff;
+            font-size: 24px;
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: 1px;
+            padding: 20px;
+            line-height: 1.4;
+        }
+
+        #fullscreen-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 10000;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.7);
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+
+        #fullscreen-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        #fullscreen-btn:active {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+
+        #fullscreen-btn.fullscreen-active {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: rgba(100, 200, 255, 1);
+        }
+
+        #pause-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 10000;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.7);
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+
+        #pause-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        #pause-btn:active {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+
+        #controller-btn {
+            position: fixed;
+            top: 10px;
+            left: 60px;
+            z-index: 10000;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.7);
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            visibility: hidden;
+        }
+
+        @media (max-width: 1024px) {
+            #controller-btn {
+                visibility: visible;
+            }
+        }
+
+        #controller-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        #controller-btn:active {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+
+        #controller-btn.controller-active {
+            background-color: rgba(100, 200, 100, 0.3);
+            color: rgba(100, 255, 100, 1);
+            border-color: rgba(100, 255, 100, 0.5);
+        }
+
+        #virtual-controller {
+            position: fixed;
+            z-index: 9998;
+            display: flex;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        #virtual-controller.active {
+            pointer-events: auto;
+        }
+
+        #virtual-controller.active .dpad-container {
+            display: grid;
+        }
+
+        #virtual-controller.active .action-btns {
+            display: flex;
+        }
+
+        .dpad-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9998;
+            display: none;
+            grid-template-columns: 40px 40px 40px;
+            grid-template-rows: 40px 40px 40px;
+            gap: 2px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .dpad-btn {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.1s ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .dpad-btn:active {
+            background-color: rgba(255, 100, 100, 0.6);
+            color: rgba(255, 255, 255, 1);
+            border-color: rgba(255, 100, 100, 0.8);
+        }
+
+        .dpad-btn.pressed {
+            background-color: rgba(255, 100, 100, 0.6);
+            color: rgba(255, 255, 255, 1);
+            border-color: rgba(255, 100, 100, 0.8);
+        }
+
+        #up-btn { grid-column: 2; grid-row: 1; }
+        #left-btn { grid-column: 1; grid-row: 2; }
+        #down-btn { grid-column: 2; grid-row: 3; }
+        #right-btn { grid-column: 3; grid-row: 2; }
+
+        .action-btns {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9998;
+            display: none;
+            gap: 5px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.1s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:active {
+            background-color: rgba(100, 200, 255, 0.6);
+            color: rgba(255, 255, 255, 1);
+            border-color: rgba(100, 200, 255, 0.8);
+        }
+
+        .action-btn.pressed {
+            background-color: rgba(100, 200, 255, 0.6);
+            color: rgba(255, 255, 255, 1);
+            border-color: rgba(100, 200, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <button id="fullscreen-btn" title="Toggle fullscreen">⛶</button>
+    <button id="pause-btn" title="Pause (TAB)">⏸</button>
+    <button id="controller-btn" title="Toggle virtual controller">🎮</button>
+
+    <div id="virtual-controller">
+        <div class="dpad-container">
+            <button class="dpad-btn" id="up-btn" data-key="ArrowUp" title="Up">▲</button>
+            <button class="dpad-btn" id="left-btn" data-key="ArrowLeft" title="Left">◄</button>
+            <button class="dpad-btn" id="down-btn" data-key="ArrowDown" title="Down">▼</button>
+            <button class="dpad-btn" id="right-btn" data-key="ArrowRight" title="Right">►</button>
+        </div>
+        <div class="action-btns">
+            <button class="action-btn" id="jump-btn" data-key="KeyW" title="Jump (W)">JUMP</button>
+            <button class="action-btn" id="attack-btn" data-key="KeyE" title="Attack (E)">ATK</button>
+        </div>
+    </div>
+
+    <div id="portrait-overlay">
+        <div id="portrait-message">
+            Please rotate your device to landscape<br>
+            for a better experience
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="game-wrapper">
+            <iframe id="game-frame" src="gameengine.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const GAME_WIDTH = 1366;
+        const GAME_HEIGHT = 768;
+        const MOBILE_TABLET_THRESHOLD = 1024; // Pixels: screens smaller than this are mobile/tablet
+        const wrapper = document.getElementById('game-wrapper');
+        const container = document.getElementById('game-container');
+        const portraitOverlay = document.getElementById('portrait-overlay');
+        const gameFrame = document.getElementById('game-frame');
+
+        // Orientation Detection
+        function isPortrait() {
+            return window.innerHeight > window.innerWidth;
+        }
+
+        function isMobileOrTablet() {
+            return Math.max(window.innerWidth, window.innerHeight) <= MOBILE_TABLET_THRESHOLD;
+        }
+
+        function updateOrientationOverlay() {
+            const shouldShowOverlay = isMobileOrTablet() && isPortrait();
+            
+            if (shouldShowOverlay) {
+                portraitOverlay.classList.add('active');
+                gameFrame.style.pointerEvents = 'none';
+            } else {
+                portraitOverlay.classList.remove('active');
+                gameFrame.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Function to calculate and apply scale
+        function updateScale() {
+            const scaleX = window.innerWidth / GAME_WIDTH;
+            const scaleY = window.innerHeight / GAME_HEIGHT;
+            const scale = Math.min(scaleX, scaleY);
+
+            // Apply scale transformation
+            wrapper.style.transform = `scale(${scale})`;
+
+            // Calculate actual displayed dimensions
+            const displayedWidth = GAME_WIDTH * scale;
+            const displayedHeight = GAME_HEIGHT * scale;
+
+            // Center the wrapper
+            wrapper.style.left = `${(window.innerWidth - displayedWidth) / 2}px`;
+            wrapper.style.top = `${(window.innerHeight - displayedHeight) / 2}px`;
+        }
+
+        // Initial setup
+        updateScale();
+        updateOrientationOverlay();
+
+        // Recalculate on window resize
+        window.addEventListener('resize', () => {
+            updateScale();
+            updateOrientationOverlay();
+        });
+
+        // Listen for orientation change
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                updateScale();
+                updateOrientationOverlay();
+            }, 100);
+        });
+
+        // Fullscreen Toggle Button
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const html = document.documentElement;
+
+        function updateFullscreenButtonState() {
+            if (document.fullscreenElement) {
+                fullscreenBtn.classList.add('fullscreen-active');
+                fullscreenBtn.title = 'Exit fullscreen';
+            } else {
+                fullscreenBtn.classList.remove('fullscreen-active');
+                fullscreenBtn.title = 'Toggle fullscreen';
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                // Request fullscreen
+                if (html.requestFullscreen) {
+                    html.requestFullscreen().catch(err => console.log('Fullscreen error:', err));
+                } else if (html.webkitRequestFullscreen) {
+                    html.webkitRequestFullscreen();
+                } else if (html.mozRequestFullScreen) {
+                    html.mozRequestFullScreen();
+                } else if (html.msRequestFullscreen) {
+                    html.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(err => console.log('Exit fullscreen error:', err));
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        });
+
+        // Update button state when fullscreen changes
+        document.addEventListener('fullscreenchange', updateFullscreenButtonState);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButtonState);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButtonState);
+        document.addEventListener('msfullscreenchange', updateFullscreenButtonState);
+
+        // Initial button state
+        updateFullscreenButtonState();
+
+        // ========== GAME ACTION HANDLERS ==========
+        // Treat TAB as a LOGICAL GAME ACTION, not a keyboard event.
+        // This avoids browser TAB interference and allows mobile button + keyboard to call the same function.
+        
+        function handleGameAction(actionName) {
+            const gameFrame = document.getElementById('game-frame');
+            if (!gameFrame || !gameFrame.contentWindow) return;
+
+            const gameWindow = gameFrame.contentWindow;
+
+            // Route action to the appropriate handler in the game
+            switch (actionName) {
+                case 'TAB_TOGGLE_PAUSE':
+                    handleTabActionInGame(gameWindow);
+                    break;
+                default:
+                    console.warn(`Unknown game action: ${actionName}`);
+            }
+        }
+
+        function handleTabActionInGame(gameWindow) {
+            // TAB toggles pause in the current level screen
+            // Access the active module through the GameEngine
+            try {
+                if (gameWindow.GameEngine && gameWindow.GameEngine.currentModule) {
+                    const module = gameWindow.GameEngine.currentModule;
+                    if (typeof module.paused !== 'undefined') {
+                        module.paused = !module.paused;
+                        // Reset hover states when opening pause menu
+                        if (module.paused && module.pauseButtons) {
+                            module.pauseButtons.forEach(b => b.hover = false);
+                        }
+                        console.log('Pause toggled:', module.paused);
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not toggle pause via direct action:', e);
+            }
+        }
+
+        // ========== PAUSE BUTTON ==========
+        // Mobile on-screen TAB button calls the game action directly (no synthetic keyboard events)
+        const pauseBtn = document.getElementById('pause-btn');
+        pauseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Call the game action directly
+            handleGameAction('TAB_TOGGLE_PAUSE');
+        });
+
+        // Optional: Also support real TAB key for desktop users
+        // This dispatches a TAB KeyboardEvent into the game's iframe for consistency
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                // Dispatch Tab event into the game iframe
+                const gameFrame = document.getElementById('game-frame');
+                if (gameFrame && gameFrame.contentWindow) {
+                    const tabEvent = new KeyboardEvent('keydown', {
+                        code: 'Tab',
+                        key: 'Tab',
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    gameFrame.contentWindow.document.dispatchEvent(tabEvent);
+                }
+            }
+        });
+
+        // ========== VIRTUAL CONTROLLER SYSTEM ==========
+        const controllerBtn = document.getElementById('controller-btn');
+        const virtualController = document.getElementById('virtual-controller');
+        let controllerActive = false;
+
+        // Toggle virtual controller visibility
+        controllerBtn.addEventListener('click', () => {
+            controllerActive = !controllerActive;
+            if (controllerActive) {
+                virtualController.classList.add('active');
+                controllerBtn.classList.add('controller-active');
+            } else {
+                virtualController.classList.remove('active');
+                controllerBtn.classList.remove('controller-active');
+            }
+        });
+
+        // Emulate keyboard events for controller buttons
+        function emulateKeyPress(keyCode, isPressed) {
+            // Create and dispatch keyboard event to the iframe's contentWindow
+            const event = new KeyboardEvent(isPressed ? 'keydown' : 'keyup', {
+                code: keyCode,
+                key: keyCode,
+                bubbles: true,
+                cancelable: true
+            });
+
+            // Dispatch to the iframe window (where the game runs)
+            const gameFrame = document.getElementById('game-frame');
+            if (gameFrame && gameFrame.contentWindow) {
+                gameFrame.contentWindow.document.dispatchEvent(event);
+                gameFrame.contentWindow.window.dispatchEvent(event);
+            }
+
+            // Also dispatch to main window for compatibility
+            document.dispatchEvent(event);
+            window.dispatchEvent(event);
+        }
+
+        // Get all controller buttons
+        const controllerButtons = document.querySelectorAll('.dpad-btn, .action-btn');
+
+        controllerButtons.forEach(btn => {
+            const keyCode = btn.dataset.key;
+
+            // Mouse down: emulate key press
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                btn.classList.add('pressed');
+                emulateKeyPress(keyCode, true);
+            });
+
+            // Mouse up: emulate key release
+            btn.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                btn.classList.remove('pressed');
+                emulateKeyPress(keyCode, false);
+            });
+
+            // Touch support for mobile
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btn.classList.add('pressed');
+                emulateKeyPress(keyCode, true);
+            });
+
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                btn.classList.remove('pressed');
+                emulateKeyPress(keyCode, false);
+            });
+
+            // Prevent accidental text selection
+            btn.addEventListener('selectstart', (e) => e.preventDefault());
+        });
+
+        // Auto-show controller on mobile/tablet devices
+        function checkControllerVisibility() {
+            if (isMobileOrTablet()) {
+                controllerBtn.style.visibility = 'visible';
+            } else {
+                controllerBtn.style.visibility = 'hidden';
+                virtualController.classList.remove('active');
+                controllerBtn.classList.remove('controller-active');
+                controllerActive = false;
+            }
+        }
+
+        checkControllerVisibility();
+        window.addEventListener('resize', checkControllerVisibility);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(checkControllerVisibility, 100);
+        });
+
+        // Prevent default scrolling behaviors
+        document.addEventListener('wheel', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>

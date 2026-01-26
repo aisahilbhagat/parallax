@@ -1,0 +1,45 @@
+/* NORMAL CURSOR EVERYWHERE */
+body {
+    cursor: url("cursor.png") 16 16, auto;
+    margin: 0;
+    overflow: hidden;
+
+    /* Deep Evening Sky Gradient */
+    background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    touch-action: none;
+}
+
+/* CURSOR ONLY CHANGES ON HTML BUTTONS */
+button {
+    cursor: url("scroll.png") 16 16, pointer;
+}
+
+/* CANVAS — LET JS CONTROL THE CURSOR */
+canvas {
+    display: block;
+    cursor: inherit; /* IMPORTANT: don't override JS or BODY cursor */
+}
+
+/* UI LAYER */
+#ui-layer {
+    position: fixed;
+    top: 20px; left: 0; width: 100%;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* ERROR MSG */
+#error-msg {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #cc0000; 
+    color: white;
+    padding: 20px; 
+    border-radius: 10px;
+    text-align: center; 
+    font-weight: bold;
+}

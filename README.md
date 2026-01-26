@@ -30,7 +30,7 @@ This game we made for our school game design challenge where we had to make our 
 
 # NOW ABOUT THE GAME
 
-- This game is playable on any device as long as that device has a brouser in it and supports touch display and keyboard-mouse
+- This game is playable on any device as long as that device has a brouser in it and supports touch display or keyboard-mouse
 - In future i will make it for controller also but i don't have any intrest to make it so but i can i do it if i am sitting jobless in my room :)
 - We have tried to make it a story based game but maybe our story is not that good we are sorry for it.
 
